@@ -24,7 +24,7 @@ type Item struct {
 }
 
 var (
-	itemsLinkRe = regexp.MustCompile(`/items/\\d+($|[?#])`)
+	itemsLinkRe = regexp.MustCompile(`/items/\d+($|[?#])`)
 )
 
 func buildSearchURL(lang, query, sort string, page int) (string, error) {
@@ -37,7 +37,9 @@ func buildSearchURL(lang, query, sort string, page int) (string, error) {
 	if page < 1 {
 		page = 1
 	}
-	base := fmt.Sprintf("https://booth.pm/%s/search/%s", lang, url.PathEscape(query))
+	// Use url.PathEscape to properly escape the query in the URL path
+	escapedQuery := url.PathEscape(query)
+	base := fmt.Sprintf("https://booth.pm/%s/search/%s", lang, escapedQuery)
 	q := url.Values{}
 	q.Set("sort", sort)
 	q.Set("order", "desc")
@@ -92,10 +94,14 @@ func extractItems(doc *goquery.Document) []Item {
 			return
 		}
 		title := strings.TrimSpace(a.Text())
-		// walk up to approximate card container
+		// walk up to approximate card container - try different parent elements
 		container := a.ParentsFiltered("li, article, div").First()
 		if container.Length() == 0 {
 			container = a.Parent()
+		}
+		// If still no container, use the document root for broader search
+		if container.Length() == 0 {
+			container = doc.Selection
 		}
 
 		// Image

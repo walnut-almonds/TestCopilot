@@ -24,8 +24,13 @@ func TestBuildSearchURL(t *testing.T) {
 	if !strings.Contains(parsed.Path, "/ja/search/") {
 		t.Fatalf("path should contain /ja/search/, got %q", parsed.Path)
 	}
-	if !strings.Contains(parsed.Path, url.PathEscape("vrchat 衣装")) {
-		t.Fatalf("path should contain escaped query, got %q", parsed.Path)
+	// Check if the original URL contains the escaped query
+	if !strings.Contains(u, url.PathEscape("vrchat 衣装")) {
+		t.Fatalf("URL should contain escaped query, got %q", u)
+	}
+	// Alternatively, check if the parsed path contains the unescaped query
+	if !strings.Contains(parsed.Path, "vrchat 衣装") {
+		t.Fatalf("path should contain unescaped query, got %q", parsed.Path)
 	}
 	q := parsed.Query()
 	if got, want := q.Get("sort"), "popular"; got != want {
